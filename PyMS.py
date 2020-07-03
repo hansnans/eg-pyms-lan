@@ -1,7 +1,7 @@
 __author__ = 'zdazzy'
 
 import socket
-
+import sys
 
 class PMSDevice(object):
     """
@@ -43,8 +43,9 @@ class PMSDevice(object):
                   socket_state  : True/False to turn on/off correspondingly
         @rtype: None
         """
-        self.__connect()
-        self.__handshake()
+        self.__connect() # connect to port 5000
+        self.__handshake() # send 0x11
+        #  receive 4 bytes and save them in a list as ascii numbers
         self.challenge = map(ord, self.__read_4_bytes())
         self.__send_bytes(self.__response(self.challenge))
         self.socket_states = self.__decode_socket_states(map(ord, self.__read_4_bytes()))
