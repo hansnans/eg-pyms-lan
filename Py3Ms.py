@@ -2,6 +2,10 @@
 import socket
 
 
+class ProtocolError(Exception):
+    pass
+
+
 def calcuate_challenge_response(password, challenge):
     """
     calc response from password and challenge
@@ -29,14 +33,37 @@ def read_4_bytes(sock):
     return sock.recv(4)
 
 
-def decode_states(challenge, password):
+def decode_states(encoded_states, challenge, password):
     # old statement
     # st = [(challenge[2] ^ ((password[0] ^ (socket_states[t] - password[1])) - challenge[3])) & 0xFF for t in range(0, 4)]
-    decoded_states = []
+    decoded_bytes = []
     for t in range(0, 4):
-        decoded_states.append(
-            (challenge[2] ^ ((password[0] ^ (socket_states[t] - password[1])) - challenge[3])) & 0xFF
+        temp = encoded_states[t]
+        decoded_bytes.append(
+            (challenge[2] ^
+             (
+                     (password[0] ^
+                      (encoded_states[t] - password[1])
+                      ) - challenge[3]
+             )
+             ) & 0xFF
         )
+
+    decoded_states = {}
+    for b in reversed(range(len(decoded_bytes))):
+        if decoded_bytes[b] == 0x41:  # state on
+            state = True
+        elif decoded_bytes[b] == 0x82:  # state off
+            state = False
+        else:
+            raise ProtocolError()
+
+        # bytes are in reverse row. Has to be reverted
+        # byte 1 -> socket 4
+        # byte 2 -> socket 3
+        # byte 3 -> socket 2
+        # byte 4 -> socket 1
+        decoded_states[3 - b] = state
 
     return decoded_states
 
@@ -60,7 +87,7 @@ with upnp_sock:
 
     upnp_sock.send(bytearray(response))
     socket_states = read_4_bytes(upnp_sock)
-    new_states = decode_states(chg, passwd)
+    new_states = decode_states(socket_states, chg, passwd)
     print(new_states)
     # a b 0 0 0 0 1 0
     # a:1 b:0 when socket is off
