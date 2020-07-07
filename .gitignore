@@ -1,3 +1,5 @@
 .idea/
 venv/
 PyMS.pyc
+.ipynb_checkpoints
+ByteOperations.ipynb
