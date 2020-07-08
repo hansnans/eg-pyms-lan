@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import logging
 import socket
 
 
@@ -11,6 +12,7 @@ class PyMs2Lan:
     PLUG_COUNT = 4
 
     def __init__(self, host, port, password):
+        logging.basicConfig(format='%(levelname)s:%(message)s')
         self.host = host
         self.port = port
         self.password = self.__encode_password(password)
@@ -20,6 +22,7 @@ class PyMs2Lan:
 
     def __connect(self):
         self.upnp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.upnp_socket.settimeout(2)
         self.upnp_socket.connect((self.host, self.port))
 
     def __disconnect(self):
@@ -139,11 +142,16 @@ class PyMs2Lan:
             raise ProtocolError('Wrong plug index type. Must be int! 0 <= plug < PLUG_COUNT')
 
     def communicate(self):
-        self.__connect()
-        self.__handshake()
-        plug_states = self.__read_plug_states()
-        for plug, change in self.__plug_changes.items():
-            plug_states[plug] = change
-        self.__write_plug_states(plug_states)
-        self.__disconnect()
-        return plug_states
+        try:
+            self.__connect()
+            self.__handshake()
+            plug_states = self.__read_plug_states()
+            for plug, change in self.__plug_changes.items():
+                plug_states[plug] = change
+            self.__write_plug_states(plug_states)
+            self.__disconnect()
+            return plug_states
+        except socket.timeout:
+            print()
+            logging.error('Connection failed. Please try again')
+            exit(1)
