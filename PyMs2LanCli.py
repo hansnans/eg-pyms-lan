@@ -1,62 +1,61 @@
 #!/usr/bin/env python3
-from sys import argv
+import argparse
 
 from PyMs2LanLib import PyMs2Lan
 
 
-def print_usage():
-    programm = argv[0].split('/')[-1:][0]
-    print(f'Usage: {programm} command <plug>')
-    print('Commands:')
-    print('enable - enable a plug')
-    print('disable - disable a plug')
-    print('status - disable a plug')
-    print()
-    print('<plug>:')
-    print(f'number between 0 and {PyMs2Lan.PLUG_COUNT - 1}')
-    exit(1)
+def add_plug_arg(parser_obj):
+    parser_obj.add_argument('plug', type=int, metavar='plug', choices=range(0, 4))
 
 
-def index_error():
-    print('invalid plug index!')
-    print()
-    print_usage()
-    exit(1)
+def parse_args():
+    parser = argparse.ArgumentParser(description='Control a EG-PMS2-LAN plug board')
+
+    parser.add_argument('-H', '--host', type=str, metavar='host', required=True)
+    parser.add_argument('-p', '--port', type=int, metavar='port', required=True)
+    parser.add_argument('-P', '--password', type=str, metavar='password', required=True)
+
+    subparsers = parser.add_subparsers(dest='cmd')
+
+    sub_status = subparsers.add_parser('status')
+    sub_enable = subparsers.add_parser('enable')
+    sub_disable = subparsers.add_parser('disable')
+
+    add_plug_arg(sub_enable)
+    add_plug_arg(sub_disable)
+
+    return parser.parse_args()
 
 
-def set_state(enabled, p):
-    print('{0} plug no. {1}'.format('Enabling' if enabled else 'Disabling', p))
-    pmslan = PyMs2Lan('192.168.1.10', 5000, '1234')
-    pmslan.set_plug_state(p, enabled)
-    pmslan.communicate()
+def format_states(states_obj):
+    assert isinstance(states_obj, dict)
+    width = 6
+    print('| '.join(['Plug'.center(width), 'State'.center(width)]))
+    print('-' * (width * 2))
 
-
-def get_states():
-    pmslan = PyMs2Lan('192.168.1.10', 5000, '1')
-    pmslan.communicate()
+    for k, v in states_obj.items():
+        status = 'ON' if v else 'OFF'
+        print('| '.join([str(k).center(width), status.ljust(width)]))
 
 
 if __name__ == '__main__':
-    argv = [argv[0], 'disable', 3]
-    cmd = None
-    plug = None
+    try:
+        arguments = parse_args()
 
-    if len(argv) > 1:
-        cmd = argv[1]
-    if len(argv) == 3:
-        try:
-            if 0 <= int(argv[2]) < PyMs2Lan.PLUG_COUNT:
-                plug = argv[2]
-            else:
-                raise ValueError
-        except ValueError:
-            index_error()
+        pmslan = PyMs2Lan(
+            arguments.host,
+            arguments.port,
+            arguments.password)
 
-    if cmd == 'status':
-        get_states()
-    elif cmd == 'enable' and plug is not None:
-        set_state(True, plug)
-    elif cmd == 'disable' and plug is not None:
-        set_state(False, plug)
-    else:
-        print_usage()
+        if arguments.cmd == 'enable':
+            print(f'Enabling plug no. {arguments.plug}')
+            pmslan.set_plug_state(arguments.plug, True)
+        elif arguments.cmd == 'disable':
+            print(f'Disabling plug no. {arguments.plug}')
+            pmslan.set_plug_state(arguments.plug, False)
+
+        states = pmslan.communicate()
+        if arguments.cmd == 'status':
+            format_states(states)
+    except KeyboardInterrupt:
+        pass
