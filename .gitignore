@@ -1,5 +1,6 @@
-.idea/
 venv/
 PyMS.pyc
 .ipynb_checkpoints
 ByteOperations.ipynb
+__pycache__
+.idea/
