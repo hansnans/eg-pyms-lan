@@ -13,40 +13,30 @@ class PyMs2Lan:
     def __init__(self, host, port, password):
         self.host = host
         self.port = port
-        self.password = self.encode_password(password)
+        self.password = self.__encode_password(password)
         self.challenge = None
         self.upnp_socket = None
         self.__plug_changes = {}
 
-    def set_plug_state(self, plug, enabled=True):
-        try:
-            assert isinstance(plug, int)
-            if plug < self.PLUG_COUNT:
-                self.__plug_changes[plug] = enabled
-            else:
-                raise ProtocolError('')
-        except AssertionError:
-            raise ProtocolError('Wrong plug index type. Must be int! 0 <= plug < PLUG_COUNT')
-
-    def connect(self):
+    def __connect(self):
         self.upnp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.upnp_socket.connect((self.host, self.port))
 
-    def disconnect(self):
+    def __disconnect(self):
         self.upnp_socket.close()
 
-    def read(self):
+    def __read(self):
         return self.upnp_socket.recv(4)
 
-    def send_array(self, array):
+    def __send_array(self, array):
         self.upnp_socket.send(bytearray(array))
 
-    def handshake(self):
+    def __handshake(self):
         self.upnp_socket.send(self.HANDSHAKE)
-        self.challenge = self.read()
-        self.send_array(self.handle_challenge_request())
+        self.challenge = self.__read()
+        self.__send_array(self.__handle_challenge_request())
 
-    def handle_challenge_request(self):
+    def __handle_challenge_request(self):
         """
         calc response from password and challenge
         :return: list
@@ -64,7 +54,7 @@ class PyMs2Lan:
             part2 >> 8 & 0xFF
         ]
 
-    def encode_password(self, password):
+    def __encode_password(self, password):
         """
         password will be filled with spaces
         to a fixed size of 8
@@ -74,7 +64,7 @@ class PyMs2Lan:
         """
         return bytes(map(ord, password.ljust(8)[:8]))
 
-    def encode_plug_states(self, decoded_states):
+    def __encode_plug_states(self, decoded_states):
         state_list = []
         for k, v in decoded_states.items():
             if v:
@@ -92,9 +82,9 @@ class PyMs2Lan:
             )
         return encoded
 
-    def decode_plug_states(self, encoded_states):
+    def __decode_plug_states(self, encoded_states):
         """
-        decode received
+        decode received bytes
         :param encoded_states:
         :return:
         """
@@ -132,18 +122,28 @@ class PyMs2Lan:
 
         return decoded_states
 
-    def read_plug_states(self):
-        return self.decode_plug_states(self.read())
+    def __read_plug_states(self):
+        return self.__decode_plug_states(self.__read())
 
-    def write_plug_states(self, plug_states):
-        self.send_array(self.encode_plug_states(plug_states))
+    def __write_plug_states(self, plug_states):
+        self.__send_array(self.__encode_plug_states(plug_states))
+
+    def set_plug_state(self, plug, enabled=True):
+        try:
+            assert isinstance(plug, int)
+            if plug < self.PLUG_COUNT:
+                self.__plug_changes[plug] = enabled
+            else:
+                raise ProtocolError('')
+        except AssertionError:
+            raise ProtocolError('Wrong plug index type. Must be int! 0 <= plug < PLUG_COUNT')
 
     def communicate(self):
-        self.connect()
-        self.handshake()
-        plug_states = self.read_plug_states()
+        self.__connect()
+        self.__handshake()
+        plug_states = self.__read_plug_states()
         for plug, change in self.__plug_changes.items():
             plug_states[plug] = change
-        self.write_plug_states(plug_states)
-
-        self.disconnect()
+        self.__write_plug_states(plug_states)
+        self.__disconnect()
+        return plug_states
