@@ -5,3 +5,6 @@ ByteOperations.ipynb
 __pycache__
 .idea/
 conf.json
+dist
+build
+eg_pyms_lan.egg-info
