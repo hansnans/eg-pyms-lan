@@ -4,7 +4,7 @@ import json
 import logging
 import sys
 
-from PyMs2LanLib import PyMs2Lan
+from eg_ms2_lan.PyMs2LanLib import PyMs2Lan
 
 
 def add_plug_arg(parser_obj):
@@ -25,7 +25,7 @@ def parse_args():
 
     subparsers = parser.add_subparsers(dest='cmd')
 
-    sub_status = subparsers.add_parser('status')
+    subparsers.add_parser('status')
     sub_enable = subparsers.add_parser('enable')
     sub_disable = subparsers.add_parser('disable')
 
