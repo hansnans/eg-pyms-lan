@@ -37,3 +37,6 @@ possible commands are:
 | enable <plug>    | enable the given plug                  |
 | disable <plug>   | disable the given plug                 |
 | status           | print the current status of all plugs  |
+
+## Thanks
+A big thanks to zdazzy for reverse-engeneering the communication.
