@@ -1,6 +1,6 @@
 from setuptools import setup
 
-with open('eg_pms2_lan/README.md', "r") as fh:
+with open('README.md', "r") as fh:
     long_description = fh.read()
 
 setup(

@@ -21,12 +21,16 @@ A template config file is under __conf.json.template__
 
 To use the config file variant just pass only the argument `--config <filename>`
 
+## Install
+```
+pip install eg_pyms_lan-2.0-py3-none-any.whl
+```
 
 ## Run
 
 To start the script just run
 ```bash
-python3 PyMs2LanCli.py <args> <command> [plug]
+pymslan <args> <command> [plug]
 ```
 
 Configuration arguments as explained above have to be present.
