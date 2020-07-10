@@ -1,15 +1,42 @@
-eg-pyms-lan
-===========
+# Energenie PMS2-LAN Python Interface
 
-A Python controller class for Energenie EG-PMS-LAN device. Reverse engineered and does not require third party libraries. Though pretty limited at the moment and does not support anything other than switching socket states.
+## config
 
-Usage
------
-  - Can be used as a Python class.
-  - Can be used from command line.
+There are two ways to configure the cli module
 
-        ./pyms-socket.py hostname password 1:0 3:1
- 
-   Connect to 'hostname' using 'password' (fixed port 5000), turn off socket 1 and turn on socket 3.
+### commandline
+| arg  | desription                                                          |
+| ---- | ------------------------------------------------------------------- |
+| -H   | host or ip of device to control                                     |
+| -p   | port that is configured in the WebUI as _Power Manager client port_ |
+|      | default is **5000**                                                 |
+| -P   | password that is configured                                         |
+|      | default is **1**                                                    |
 
-   A 2-3 seconds delay is required between calls because the device cannot process requests any faster. On the contrary, requests through Web interface (forging a POST request) are processed without delay. Kinda makes you wonder, huh.
+
+### config file 
+
+The config is expected in the JSON format.
+A template config file is under __conf.json.template__
+
+To use the config file variant just pass only the argument `--config <filename>`
+
+
+## Run
+
+To start the script just run
+```bash
+python3 PyMs2LanCli.py <args> <command> [plug]
+```
+
+Configuration arguments as explained above have to be present.
+possible commands are:
+
+| command          | desription                             |
+| ---------------- | -------------------------------------- |
+| enable <plug>    | enable the given plug                  |
+| disable <plug>   | disable the given plug                 |
+| status           | print the current status of all plugs  |
+
+## Thanks
+A big thanks to [zdazzy](https://github.com/zdazzy/) for reverse-engeneering the communication.
